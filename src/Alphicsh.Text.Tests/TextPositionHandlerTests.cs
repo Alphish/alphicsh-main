@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Alphicsh.Text.Tests
 {
-    public class TextPositionHandlerTest
+    public class TextPositionHandlerTests
     {
         // ------------------------
         // static.Create(...) tests
@@ -16,7 +16,7 @@ namespace Alphicsh.Text.Tests
         [InlineData(1, 1, 1, 1)]
         [InlineData(4, 3, 1, 1)]
         [InlineData(2, 1, 2, 5)]
-        public void Create_SetsRightPosition(long initialCharacter, long initialLine, long initialLineCharacter, long initialColumn)
+        public void Create_SetsRightPosition(int initialCharacter, int initialLine, int initialLineCharacter, int initialColumn)
         {
             var position = new TextPosition(initialCharacter, initialLine, initialLineCharacter, initialColumn);
             var handler = TextPositionHandler.Create(textPosition: position);
@@ -61,9 +61,9 @@ namespace Alphicsh.Text.Tests
         [InlineData(6,   3, 2, 3, 5,   4, 2, 4, 7)]
         [InlineData(6,   4, 2, 4, 7,   5, 2, 5, 13)]
         public void AdvanceByCharacter_UsesRightTabColumnCount(
-            long tabColumnCount,
-            long initialCharacter, long initialLine, long initialLineCharacter, long initialColumn,
-            long nextCharacter, long nextLine, long nextLineCharacter, long nextColumn
+            int tabColumnCount,
+            int initialCharacter, int initialLine, int initialLineCharacter, int initialColumn,
+            int nextCharacter, int nextLine, int nextLineCharacter, int nextColumn
             )
         {
             var position = new TextPosition(initialCharacter, initialLine, initialLineCharacter, initialColumn);
@@ -98,17 +98,17 @@ namespace Alphicsh.Text.Tests
         // Helper private methods
         // ----------------------
 
-        private void AdvanceAndAssert(ITextPositionHandler handler, char character, long characterIndex, long line, long lineCharacter, long column)
+        private void AdvanceAndAssert(ITextPositionHandler handler, char character, int index, int line, int lineIndex, int column)
         {
             handler.AdvanceByCharacter(character);
-            AssertPosition(handler.TextPosition, characterIndex, line, lineCharacter, column);
+            AssertPosition(handler.TextPosition, index, line, lineIndex, column);
         }
 
-        private void AssertPosition(TextPosition position, long character, long line, long lineCharacter, long column)
+        private void AssertPosition(TextPosition position, int index, int line, int lineIndex, int column)
         {
-            Assert.Equal(character, position.Character);
+            Assert.Equal(index, position.Index);
             Assert.Equal(line, position.Line);
-            Assert.Equal(lineCharacter, position.LineCharacter);
+            Assert.Equal(lineIndex, position.LineIndex);
             Assert.Equal(column, position.Column);
         }
     }

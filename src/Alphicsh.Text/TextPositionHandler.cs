@@ -19,7 +19,7 @@ namespace Alphicsh.Text
         /// <param name="joinCrlf">Whether a CRLF sequence should advance the position by a single line (join) or two (separate).</param>
         public static ITextPositionHandler Create(
             TextPosition textPosition = null,
-            long tabColumnCount = 4,
+            int tabColumnCount = 4,
             bool joinCrlf = true
             )
         {
@@ -30,23 +30,26 @@ namespace Alphicsh.Text
         // Public API
         // ----------
 
-        public TextPosition TextPosition => _textPosition;
+        public TextPosition TextPosition
+        {
+            get => _textPosition;
+            set => _textPosition = value;
+        }
 
-        public long AdvanceByCharacter(char character) => DoAdvanceByCharacter(character);
+        public int AdvanceByCharacter(char character) => DoAdvanceByCharacter(character);
 
         // -------------
         // Configuration
         // -------------
 
-        private readonly TextPosition _textPosition;
-        private readonly long _tabColumnCount;
+        private readonly int _tabColumnCount;
         private readonly bool _joinCrlf;
 
         // --------------
         // Internal state
         // --------------
 
-        private bool _hasUnmatchedCarriageReturn;
+        private TextPosition _textPosition;
 
         // --------------
         // Internal logic
@@ -56,7 +59,7 @@ namespace Alphicsh.Text
 
         private TextPositionHandler(
             TextPosition textPosition,
-            long tabColumnCount,
+            int tabColumnCount,
             bool joinCrlf
             )
         {
@@ -67,62 +70,39 @@ namespace Alphicsh.Text
 
         // Methods
 
-        private long DoAdvanceByCharacter(char character)
+        private int DoAdvanceByCharacter(char character)
         {
-            _textPosition.Character++;
+            _textPosition.Index++;
 
             // if the character is a NL matching CR, don't change anything else
-            var matchCarriageReturn = _hasUnmatchedCarriageReturn && character == '\n';
-            _hasUnmatchedCarriageReturn = false;
-            if (matchCarriageReturn)
+            var isNewLineAfterCarriageReturn = character == '\n' && _textPosition.LastCharacter == '\r';
+            _textPosition.LastCharacter = character;
+            if (isNewLineAfterCarriageReturn && _joinCrlf)
                 return 0;
 
-            _textPosition.LineCharacter++;
+            _textPosition.LineIndex++;
 
-            long columnCount = 0;
+            var isNextLine = (character == '\r' || character == '\n');
+            var isTab = (character == '\t');
 
-            if (character == '\r')
-                columnCount = HandleCarriageReturn();
-            else if (character == '\n')
-                columnCount = HandleNewLine();
-            else if (character == '\t')
-                columnCount = HandleTab();
-            else
-                columnCount = HandleRegularCharacter();
+            if (isNextLine)
+                BeginLine();
 
-            _textPosition.Column += columnCount;
-
-            return columnCount;
-        }
-
-        private long HandleCarriageReturn()
-        {
-            BeginLine();
-            _hasUnmatchedCarriageReturn = _joinCrlf;
-            return 0;
-        }
-
-        private long HandleNewLine()
-        {
-            BeginLine();
-            return 0;
-        }
-
-        private long HandleTab()
-        {
-            return _tabColumnCount - (_textPosition.Column - 1) % _tabColumnCount;
-        }
-
-        private long HandleRegularCharacter()
-        {
-            return 1;
+            int addedColumnCount = isNextLine ? 0 : isTab ? GetNextTabCount() : /* is regular character */ 1;
+            _textPosition.Column += addedColumnCount;
+            return addedColumnCount;
         }
 
         private void BeginLine()
         {
             _textPosition.Line++;
-            _textPosition.LineCharacter = 1; 
+            _textPosition.LineIndex = 1; 
             _textPosition.Column = 1;
+        }
+
+        private int GetNextTabCount()
+        {
+            return _tabColumnCount - (_textPosition.Column - 1) % _tabColumnCount;
         }
     }
 }
