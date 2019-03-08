@@ -21,14 +21,14 @@ namespace Alphicsh.Text.Tests
             var position = new TextPosition(initialCharacter, initialLine, initialLineCharacter, initialColumn);
             var handler = TextPositionHandler.Create(textPosition: position);
 
-            AssertPosition(handler.TextPosition, initialCharacter, initialLine, initialLineCharacter, initialColumn);
+            ExtAssert.AssertPosition(handler.TextPosition, initialCharacter, initialLine, initialLineCharacter, initialColumn);
         }
 
         [Fact]
         public void Create_UsesRightDefaults()
         {
             var handler = TextPositionHandler.Create();
-            AssertPosition(handler.TextPosition, 1, 1, 1, 1);
+            ExtAssert.AssertPosition(handler.TextPosition, 1, 1, 1, 1);
 
             AdvanceAndAssert(handler, '\t', 2, 1, 2, 5);
             AdvanceAndAssert(handler, '\t', 3, 1, 3, 9);
@@ -101,15 +101,7 @@ namespace Alphicsh.Text.Tests
         private void AdvanceAndAssert(ITextPositionHandler handler, char character, int index, int line, int lineIndex, int column)
         {
             handler.AdvanceByCharacter(character);
-            AssertPosition(handler.TextPosition, index, line, lineIndex, column);
-        }
-
-        private void AssertPosition(TextPosition position, int index, int line, int lineIndex, int column)
-        {
-            Assert.Equal(index, position.Index);
-            Assert.Equal(line, position.Line);
-            Assert.Equal(lineIndex, position.LineIndex);
-            Assert.Equal(column, position.Column);
+            ExtAssert.AssertPosition(handler.TextPosition, index, line, lineIndex, column);
         }
     }
 }

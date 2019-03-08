@@ -12,12 +12,18 @@ namespace Alphicsh.Text
 
         TextPosition Position { get; }
 
+        char Peek();
+        string PeekBlock(int count);
+        string PeekWhile(Func<char, bool> predicate);
+        string PeekCharset(bool[] charset);
+
         char Read();
+        string ReadBlock(int count);
+        string ReadWhile(Func<char, bool> predicate);
+        string ReadCharset(bool[] charset);
 
-        char Buffer();
-
-        void Backtrack();
-
-        string Flush();
+        void SavePosition(string savepointName);
+        void LoadPosition(string savepointName);
+        void ForgetPosition(string savepointName);
     }
 }

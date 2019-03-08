@@ -10,9 +10,9 @@ namespace Alphicsh.Text.Tests
 {
     public class TextScannerTests
     {
-        // --------------------------
-        // Simple expectations checks
-        // --------------------------
+        // ------------------------------------------
+        // Simple properties and Peek()/Read() checks
+        // ------------------------------------------
 
         // Tests
 
@@ -38,21 +38,31 @@ namespace Alphicsh.Text.Tests
 
         [Theory]
         [MemberData(nameof(SimpleExpectationParameters))]
-        public void Read_Works(string str)
+        public void Position_Works(string str)
         {
             TestSimpleExpectation(
-                baseString: str, readAfterCheck: false,
-                check: (baseString, i, scanner) => (i < baseString.Length ? baseString[i] : '\0') == scanner.Read()
+                baseString: str, readAfterCheck: true,
+                check: (baseString, i, scanner) => Math.Min(i, baseString.Length) + 1 == scanner.Position.Index
                 );
         }
 
         [Theory]
         [MemberData(nameof(SimpleExpectationParameters))]
-        public void Buffer_Works(string str)
+        public void Peek_Works(string str)
+        {
+            TestSimpleExpectation(
+                baseString: str, readAfterCheck: true,
+                check: (baseString, i, scanner) => (i < baseString.Length ? baseString[i] : '\0') == scanner.Peek()
+                );
+        }
+
+        [Theory]
+        [MemberData(nameof(SimpleExpectationParameters))]
+        public void Read_Works(string str)
         {
             TestSimpleExpectation(
                 baseString: str, readAfterCheck: false,
-                check: (baseString, i, scanner) => (i < baseString.Length ? baseString[i] : '\0') == scanner.Buffer()
+                check: (baseString, i, scanner) => (i < baseString.Length ? baseString[i] : '\0') == scanner.Read()
                 );
         }
 
@@ -68,32 +78,20 @@ namespace Alphicsh.Text.Tests
 
         private void TestSimpleExpectation(string baseString, bool readAfterCheck, SimpleExpectationCheck check)
         {
-            var scanner = TextScanner.CreateFromString(baseString);
-            for (var i = 0; i < 20; i++)
+            using (var scanner = TextScanner.CreateFromString(baseString))
             {
-                Assert.True(check(baseString, i, scanner));
-                if (readAfterCheck)
-                    scanner.Read();
+                for (var i = 0; i < 20; i++)
+                {
+                    Assert.True(check(baseString, i, scanner));
+                    if (readAfterCheck)
+                        scanner.Read();
+                }
             }
         }
 
         // -------------------------
-        // Buffer manipulation tests
+        // Block Peek*/Read* methods
         // -------------------------
 
-        [Theory]
-        [InlineData("Hello, world!", "Hello", ", world", "!", "")]
-        [InlineData("Lorem ipsum dolor sit amet", "Lo", "rem ip", "sum d", "olor sit a", "met")]
-        public void Flush_Works(string baseString, params string[] flushResults)
-        {
-            var scanner = TextScanner.CreateFromString(baseString);
-
-            foreach (var result in flushResults)
-            {
-                for (var i = 0; i < result.Length; i++)
-                    scanner.Buffer();
-                Assert.Equal(result, scanner.Flush());
-            }
-        }
     }
 }

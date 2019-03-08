@@ -5,23 +5,26 @@ using System.Text;
 
 namespace Alphicsh.Text
 {
-    public sealed partial class TextScanner : ITextScanner
+    // yes, it is a partial class
+    // yes, with all the files combined, this class would be pretty big
+    // however, the class still has a single primary concern - reading text from a sequence and being awesome in that area
+    public sealed partial class TextScanner : ITextScanner, IDisposable
     {
         // --------
         // Creation
         // --------
 
-        public static TextScanner CreateFromString(string str, ITextPositionHandler positionHandler = null)
+        public static ITextScanner CreateFromString(string str, ITextPositionHandler positionHandler = null)
         {
             return CreateFromTextReader(new StringReader(str), positionHandler);
         }
         
-        public static TextScanner CreateFromStream(Stream stream, ITextPositionHandler positionHandler = null)
+        public static ITextScanner CreateFromStream(Stream stream, ITextPositionHandler positionHandler = null)
         {
             return CreateFromTextReader(new StreamReader(stream), positionHandler);
         }
 
-        public static TextScanner CreateFromTextReader(TextReader reader, ITextPositionHandler positionHandler = null)
+        public static ITextScanner CreateFromTextReader(TextReader reader, ITextPositionHandler positionHandler = null)
         {
             return new TextScanner(reader, positionHandler ?? TextPositionHandler.Create());
         }
@@ -31,107 +34,65 @@ namespace Alphicsh.Text
         // ----------
 
         public char CurrentCharacter => _currentCharacter;
-
         public bool IsEndOfText => _currentCharacter == '\0';
-
         public TextPosition Position => _positionHandler.TextPosition;
 
+        public char Peek() => _currentCharacter;    // Peek and CurrentCharacter are pretty much equivalent
+        public string PeekBlock(int count) => DoPeekBlock(count);
+        public string PeekWhile(Func<char, bool> predicate) => DoPeekWhile(predicate);
+        public string PeekCharset(bool[] charset) => DoPeekCharset(charset);
+
         public char Read() => DoRead();
+        public string ReadBlock(int count) => DoReadBlock(count);
+        public string ReadWhile(Func<char, bool> predicate) => DoReadWhile(predicate);
+        public string ReadCharset(bool[] charset) => DoReadCharset(charset);
 
-        public char Buffer() => DoBuffer();
+        public void SavePosition(string savepointName) => DoSavePosition(savepointName);
+        public void LoadPosition(string savepointName) => DoLoadPosition(savepointName);
+        public void ForgetPosition(string savepointName) => DoForgetPosition(savepointName);
 
-        public void Backtrack() => DoBacktrack();
-
-        public string Flush() => DoFlush();
-
-        // --------------
-        // Internal state
-        // --------------
+        // --------------------
+        // Basic internal state
+        // --------------------
 
         private TextReader _textReader;
-        private char _currentCharacter;
         private ITextPositionHandler _positionHandler;
-        private BufferState _bufferState;
 
-        // --------------
-        // Internal logic
-        // --------------
+        private char _currentCharacter;
 
+        // -----------
         // Constructor
+        // -----------
 
         private TextScanner(TextReader textReader, ITextPositionHandler positionHandler)
         {
             _textReader = textReader;
             _positionHandler = positionHandler;
-
-            _currentCharacter = '\0';
-            _bufferState = new BufferState();
-
-            ReadCurrentCharacterAndAdvance();
+            UpdateCurrentCharacter();
         }
 
-        // Methods
+        // --------------
+        // Internal logic
+        // --------------
 
-        private char DoRead()
-        {
-            var result = DoBuffer();
-            DoFlush();
-            return result;
-        }
-
-        private char DoBuffer()
-        {
-            if (IsEndOfText)
-                return _currentCharacter;
-
-            var result = ReadCurrentCharacterAndAdvance();
-            _bufferState.Buffer(result);
-            _positionHandler.AdvanceByCharacter(result);
-            return result;
-        }
-
-        private void DoBacktrack()
-        {
-            _bufferState.Backtrack();
-            _positionHandler.TextPosition = _bufferState.StartPosition;
-            ReadCurrentCharacterAndAdvance();
-        }
-
-        private string DoFlush()
-        {
-            return _bufferState.Flush(_positionHandler.TextPosition);
-        }
-
-        private char ReadCurrentCharacterAndAdvance()
-        {
-            var result = _currentCharacter;
-            if (_bufferState.TryAdvance(out char c))
-            {
-                _currentCharacter = c;
-            }
-            else
-            {
-                int readCharacter = _textReader.Read();
-                _currentCharacter = readCharacter >= 0 ? (char)readCharacter : '\0';
-            }
-            return result;
-        }
+        // the DoPeek*/DoRead* implementations are in TextScanner_Reading section
+        // the Save/Load/ForgetPosition implementations are in TextScanner_Positions section
 
         // --------------
         // Waste disposal
         // --------------
 
-        private bool _isDisposeHandler = false;
+        private bool _isDisposed = false;
 
         void Dispose(bool isDisposing)
         {
-            if (_isDisposeHandler)
+            if (_isDisposed)
                 return;
 
             if (isDisposing)
                 _textReader.Dispose();
 
-            _isDisposeHandler = true;
+            _isDisposed = true;
         }
 
         public void Dispose()
