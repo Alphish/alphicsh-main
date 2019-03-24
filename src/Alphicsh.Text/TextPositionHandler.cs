@@ -16,19 +16,24 @@ namespace Alphicsh.Text
         /// </summary>
         /// <param name="textPosition">The text position to handle.</param>
         /// <param name="tabColumnCount">The maximum number of columns added for a tab character.</param>
-        /// <param name="joinCrlf">Whether a CRLF sequence should advance the position by a single line (join) or two (separate).</param>
+        /// <param name="lineBreakConvention">The used line break convention.</param>
         public static ITextPositionHandler Create(
             TextPosition textPosition = null,
             int tabColumnCount = 4,
-            bool joinCrlf = true
+            LineBreakConvention lineBreakConvention = default
             )
         {
-            return new TextPositionHandler(textPosition, tabColumnCount, joinCrlf);
+            if (!Enum.IsDefined(typeof(LineBreakConvention), lineBreakConvention))
+                throw new ArgumentException($"The value {lineBreakConvention} is not recognized for {nameof(LineBreakConvention)} enumeration.", nameof(lineBreakConvention));
+
+            return new TextPositionHandler(textPosition, tabColumnCount, lineBreakConvention);
         }
 
         // ----------
         // Public API
         // ----------
+
+        public LineBreakConvention LineBreakConvention => _lineBreakConvention;
 
         public TextPosition TextPosition
         {
@@ -43,7 +48,7 @@ namespace Alphicsh.Text
         // -------------
 
         private readonly int _tabColumnCount;
-        private readonly bool _joinCrlf;
+        private readonly LineBreakConvention _lineBreakConvention;
 
         // --------------
         // Internal state
@@ -60,12 +65,12 @@ namespace Alphicsh.Text
         private TextPositionHandler(
             TextPosition textPosition,
             int tabColumnCount,
-            bool joinCrlf
+            LineBreakConvention lineBreakConvention
             )
         {
             _textPosition = textPosition ?? new TextPosition();
             _tabColumnCount = tabColumnCount;
-            _joinCrlf = joinCrlf;
+            _lineBreakConvention = lineBreakConvention;
         }
 
         // Methods
@@ -77,17 +82,22 @@ namespace Alphicsh.Text
             // if the character is a NL matching CR, don't change anything else
             var isNewLineAfterCarriageReturn = character == '\n' && _textPosition.LastCharacter == '\r';
             _textPosition.LastCharacter = character;
-            if (isNewLineAfterCarriageReturn && _joinCrlf)
+            if (isNewLineAfterCarriageReturn && _lineBreakConvention == LineBreakConvention.BothWithCrlf)
                 return 0;
 
             _textPosition.LineIndex++;
 
-            var isNextLine = (character == '\r' || character == '\n');
-            var isTab = (character == '\t');
+            // handle next line characters
+            var isNextLine = (
+                (character == '\r' && _lineBreakConvention != LineBreakConvention.LineFeedOnly) ||
+                (character == '\n' && _lineBreakConvention != LineBreakConvention.CarriageReturnOnly)
+                );
 
             if (isNextLine)
                 BeginLine();
 
+            // handle other characters, including tab
+            var isTab = (character == '\t');
             int addedColumnCount = isNextLine ? 0 : isTab ? GetNextTabCount() : /* is regular character */ 1;
             _textPosition.Column += addedColumnCount;
             return addedColumnCount;

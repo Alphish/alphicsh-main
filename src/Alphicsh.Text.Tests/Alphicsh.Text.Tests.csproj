@@ -7,7 +7,7 @@
     <ProjectGuid>{45CA5CFC-1426-43E3-B34D-385E7BB8A076}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Alphicsh.Text.Tests</RootNamespace>
+    <RootNamespace>Alphicsh.Text</RootNamespace>
     <AssemblyName>Alphicsh.Text.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -55,9 +55,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExtAssert.cs" />
+    <Compile Include="Scanning\TextScannerTests_Queries.cs" />
     <Compile Include="TextPositionHandlerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TextScannerTests.cs" />
+    <Compile Include="Scanning\TextScannerTests_Basics.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -6,15 +6,14 @@ using System.Threading.Tasks;
 
 using Xunit;
 
-namespace Alphicsh.Text.Tests
+namespace Alphicsh.Text.Scanning
 {
-    public class TextScannerTests
+    // Simple properties and Peek()/Read() checks
+    public partial class TextScannerTests
     {
-        // ------------------------------------------
-        // Simple properties and Peek()/Read() checks
-        // ------------------------------------------
-
+        // -----
         // Tests
+        // -----
 
         [Theory]
         [MemberData(nameof(SimpleExpectationParameters))]
@@ -66,7 +65,9 @@ namespace Alphicsh.Text.Tests
                 );
         }
 
-        // Helper methods
+        // ---------
+        // Utilities
+        // ---------
 
         public static object[][] SimpleExpectationParameters => new object[][]
         {
@@ -78,20 +79,13 @@ namespace Alphicsh.Text.Tests
 
         private void TestSimpleExpectation(string baseString, bool readAfterCheck, SimpleExpectationCheck check)
         {
-            using (var scanner = TextScanner.CreateFromString(baseString))
+            var scanner = TextScanner.CreateFromString(baseString);
+            for (var i = 0; i < 20; i++)
             {
-                for (var i = 0; i < 20; i++)
-                {
-                    Assert.True(check(baseString, i, scanner));
-                    if (readAfterCheck)
-                        scanner.Read();
-                }
+                Assert.True(check(baseString, i, scanner));
+                if (readAfterCheck)
+                    scanner.Read();
             }
         }
-
-        // -------------------------
-        // Block Peek*/Read* methods
-        // -------------------------
-
     }
 }

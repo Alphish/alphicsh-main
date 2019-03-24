@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Xunit;
 
-namespace Alphicsh.Text.Tests
+namespace Alphicsh.Text
 {
     public static class ExtAssert
     {

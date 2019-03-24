@@ -7,6 +7,11 @@ namespace Alphicsh.Text
     public interface ITextPositionHandler
     {
         /// <summary>
+        /// Gets the used line break method.
+        /// </summary>
+        LineBreakConvention LineBreakConvention { get; }
+
+        /// <summary>
         /// The underlying text position.
         /// </summary>
         TextPosition TextPosition { get; set; }

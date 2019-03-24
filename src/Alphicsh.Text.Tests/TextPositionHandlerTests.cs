@@ -4,7 +4,7 @@ using Xunit;
 
 using System.Collections.Generic;
 
-namespace Alphicsh.Text.Tests
+namespace Alphicsh.Text
 {
     public class TextPositionHandlerTests
     {
@@ -73,9 +73,9 @@ namespace Alphicsh.Text.Tests
         }
 
         [Fact]
-        public void AdvanceByCharacter_JoinsCrlfWhenJoinCrlfSet()
+        public void AdvanceByCharacter_JoinsCrlfByConvention()
         {
-            var handler = TextPositionHandler.Create(joinCrlf: true);
+            var handler = TextPositionHandler.Create(lineBreakConvention: LineBreakConvention.BothWithCrlf);
 
             AdvanceAndAssert(handler, '\r', 2, 2, 1, 1);
             AdvanceAndAssert(handler, '\r', 3, 3, 1, 1);
@@ -84,9 +84,9 @@ namespace Alphicsh.Text.Tests
         }
 
         [Fact]
-        public void AdvanceByCharacter_SeparatesCrlfWhenJoinCrlfNotSet()
+        public void AdvanceByCharacter_SeparatesCrAndLfByConvention()
         {
-            var handler = TextPositionHandler.Create(joinCrlf: false);
+            var handler = TextPositionHandler.Create(lineBreakConvention: LineBreakConvention.BothWithoutCrlf);
 
             AdvanceAndAssert(handler, '\r', 2, 2, 1, 1);
             AdvanceAndAssert(handler, '\r', 3, 3, 1, 1);
